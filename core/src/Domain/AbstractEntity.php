@@ -22,10 +22,10 @@ abstract class AbstractEntity
      * @param string|null $deletedAt
      */
     public function __construct(
-        public readonly ?string $id = null,
-        public readonly ?string $createdAt = null,
-        public readonly ?string $updatedAt = null,
-        public readonly ?string $deletedAt = null
+        protected ?string $id = null,
+        protected ?string $createdAt = null,
+        protected ?string $updatedAt = null,
+        protected ?string $deletedAt = null
     ) {
     }
 }
