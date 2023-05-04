@@ -12,5 +12,5 @@ interface MessageDispatcherInterface
      * @param MessageInterface $message
      * @return void
      */
-    public function dispatch(MessageInterface $message): void;
+    public function dispatch(MessageInterface $message, array $metadata = []): void;
 }
