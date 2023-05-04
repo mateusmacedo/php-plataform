@@ -22,7 +22,7 @@ class Result
      * @param mixed $value
      * @param ApplicationException $error
      */
-    private function __construct(public readonly bool $isSuccess, public readonly mixed $value = null, public readonly ?ApplicationException $error)
+    private function __construct(public readonly bool $isSuccess, public readonly mixed $value = null, public readonly ?Exception $error)
     {
     }
 
@@ -40,10 +40,10 @@ class Result
     /**
     * Failure constructor
     *
-    * @param ApplicationException $error
+    * @param Exception $error
     * @return Result
     */
-    public static function failure(ApplicationException $error): Result
+    public static function failure(Exception $error): Result
     {
         return new self(false, null, $error);
     }
@@ -59,26 +59,6 @@ class Result
     }
 
     /**
-     * Check if the result is a failure
-     *
-     * @return bool
-     */
-    public function getValue()
-    {
-        return $this->value;
-    }
-
-    /**
-     * Get the error
-     *
-     * @return ApplicationException
-     */
-    public function getError()
-    {
-        return $this->error;
-    }
-
-    /**
      * Map the result value as a parameter for the callable function
      * and return a new result
      *
@@ -91,23 +71,8 @@ class Result
             try {
                 return self::success($function($this->value));
             } catch (Exception $e) {
-                return self::failure($e);
+                return self::failure(new ApplicationException($e->getMessage()));
             }
-        }
-
-        return $this;
-    }
-
-    /**
-     * Define a error handler for the result
-     *
-     * @param callable $function
-     * @return Result
-     */
-    public function onError(callable $function): Result
-    {
-        if (!$this->isSuccess) {
-            $function($this->error);
         }
 
         return $this;

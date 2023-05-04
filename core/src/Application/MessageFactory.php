@@ -6,7 +6,7 @@ namespace Core\Application;
 
 use Ds\Map;
 
-class AbstractMessageFactory
+class MessageFactory
 {
     private Map $messages;
 
@@ -21,7 +21,7 @@ class AbstractMessageFactory
         if (!enum_exists($actionsEnumPath)) {
             throw new ApplicationException('an enum instance is expected for the action record.');
         }
-        foreach ($actionsEnumPath::members() as $action) {
+        foreach ($actionsEnumPath::cases() as $action) {
             $this->messages->put($action->value, $action);
         }
     }
@@ -37,11 +37,11 @@ class AbstractMessageFactory
             throw new ApplicationException('the action is not registered.');
         }
         $message = $this->messages->get($action);
-        return empty($data) ? new $message() : new $message(...$data);
+        return empty($data) ? new $message->value() : new $class(...$data);
     }
 
     public function list(): array
     {
-        return $this->messages->values()->toArray();
+        return $this->messages->keys()->toArray();
     }
 }
