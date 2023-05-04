@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Core\Domain;
 
-interface IdGenerator
+interface IdGeneratorInterface
 {
     public static function generate(): string|int;
 }
