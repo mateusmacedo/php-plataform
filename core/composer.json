@@ -1,0 +1,63 @@
+{
+    "name": "mateusmacedo/php-plataform-core",
+    "description": "PHP Core with Tatical DDD, CQRS, EDA",
+    "type": "library",
+    "require": {
+        "ecotone/laravel": "^1.80",
+        "guzzlehttp/guzzle": "^7.5",
+        "monolog/monolog": "^2.9.1"
+    },
+    "require-dev": {
+        "fakerphp/faker": "2.x-dev",
+        "friendsofphp/php-cs-fixer": "dev-master",
+        "marcocesarato/php-conventional-changelog": "^1.17",
+        "mockery/mockery": "2.0.x-dev",
+        "phpstan/phpstan": "1.11.x-dev",
+        "phpunit/phpunit": "10.2.x-dev"
+    },
+    "license": "Mit",
+    "autoload": {
+        "psr-4": {
+            "Core\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Mateus Macedo Dos Anjos",
+            "email": "macedodosanjosmateus@gmail.com"
+        }
+    ],
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "process-timeout": 0
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "code-analyze": " php -d memory_limit=-1 vendor/bin/phpstan analyze",
+        "code-analyze:report": " php -d memory_limit=-1 vendor/bin/phpstan analyze --error-format=gitlab > ${REPORT_PATH}quality.json || true",
+        "check-style": "vendor/bin/php-cs-fixer fix --diff --verbose --dry-run .",
+        "lint-fix": "vendor/bin/php-cs-fixer fix .",
+        "lint-validation": "vendor/bin/php-cs-fixer fix -v --using-cache no --dry-run --stop-on-violation",
+        "unit-test": "php -d memory_limit=-1 vendor/bin/phpunit --testdox --no-coverage --configuration phpunit.xml",
+        "unit-test-cov": "XDEBUG_MODE=coverage php -d memory_limit=-1 vendor/bin/phpunit --testdox --coverage-text --configuration phpunit.xml",
+        "test-coverage-html": "XDEBUG_MODE=coverage php -d memory_limit=-1 vendor/bin/phpunit --coverage-html=coverage --configuration phpunit.xml",
+        "unit-test:report": "php -d memory_limit=-1 vendor/bin/phpunit --testdox --coverage-text --colors=never --log-junit ${REPORT_PATH}logfile.xml --coverage-clover ${REPORT_PATH}coverage.xml --configuration phpunit.xml",
+        "changelog": "conventional-changelog",
+        "release": "conventional-changelog --commit",
+        "release:patch": "conventional-changelog --patch --commit",
+        "release:minor": "conventional-changelog --minor --commit",
+        "release:major": "conventional-changelog --major --commit"
+    },
+    "version": "0.0.1"
+}
