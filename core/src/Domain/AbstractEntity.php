@@ -28,4 +28,14 @@ abstract class AbstractEntity
         protected ?string $deletedAt = null
     ) {
     }
+
+    /**
+     * Method to get the id of the entity
+     *
+     * @return string|null
+     */
+    public function getId(): ?string
+    {
+        return $this->id;
+    }
 }
