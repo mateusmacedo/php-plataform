@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Core\Application;
+namespace Core\Application\Handlers;
 
 /**
  * Interface CommandHandlerInterface

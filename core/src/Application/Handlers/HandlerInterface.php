@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Core\Application;
+namespace Core\Application\Handlers;
+use Core\Application\MessageInterface;
+use Core\Application\Result;
 
 /**
  * Interface HandlerInterface defines the contract for a handler
