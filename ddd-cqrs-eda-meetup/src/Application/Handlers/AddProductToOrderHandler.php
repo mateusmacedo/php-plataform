@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Application;
+namespace App\Application\Handlers;
 
-use App\Domain\OrderRepositoryInterface;
-use App\Domain\ProductRepositoryInterface;
-use Core\Application\ApplicationException;
+use App\Application\Commands\AddProductToOrderCommand;
+use App\Domain\{AbstractOrderRepository, AbstractProductRepository};
 use Core\Application\Handlers\CommandHandlerInterface;
-use Core\Application\MessageDispatcherInterface;
-use Core\Application\Result;
+use Core\Application\{ApplicationException, MessageDispatcherInterface, Result};
 use Core\Domain\Validators\AbstractValidator;
 use Exception;
 
@@ -17,19 +15,20 @@ class AddProductToOrderHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly AbstractValidator $validator,
-        private readonly OrderRepositoryInterface $orderRepository,
-        private readonly ProductRepositoryInterface $productRepository,
+        private readonly AbstractOrderRepository $orderRepository,
+        private readonly AbstractProductRepository $productRepository,
         private readonly MessageDispatcherInterface $messageDispatcher
     ) {
     }
 
     /**
-     * Handle a message and return a result
+     * Handle a message and return a result.
      *
-     * @param \Core\Application\MessageInterface $message
-     * @return \Core\Application\Result
+     * @param AddProductToOrderCommand $command
+     *
+     * @return Result
      */
-    public function handle(AddProductToOrderCommand $command): Result
+    public function handle($command): Result
     {
         try {
             if (!$this->validator->validate($command)) {
@@ -46,7 +45,7 @@ class AddProductToOrderHandler implements CommandHandlerInterface
             if ($order && $product) {
                 $order->addProduct($product);
                 $this->orderRepository->save($order);
-                foreach ($order->releaseEvents() as $event) {
+                foreach ($order->getEvents() as $event) {
                     $this->messageDispatcher->dispatch($event);
                 }
                 $order->clearEvents();

@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Handlers;
 
-use App\Application\RemoveProductFromOrderCommand;
-use App\Domain\OrderRepositoryInterface;
-use App\Domain\ProductRepositoryInterface;
-use Core\Application\ApplicationException;
+use App\Application\Commands\RemoveProductFromOrderCommand;
+use App\Domain\{AbstractOrderRepository, AbstractProductRepository};
 use Core\Application\Handlers\CommandHandlerInterface;
-use Core\Application\MessageDispatcherInterface;
-use Core\Application\Result;
+use Core\Application\{ApplicationException, MessageDispatcherInterface, Result};
 use Core\Domain\Validators\AbstractValidator;
 use Exception;
 
@@ -18,18 +15,20 @@ final class RemoveProductFromOrderHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly AbstractValidator $validator,
-        private readonly OrderRepositoryInterface $orderRepository,
-        private readonly ProductRepositoryInterface $productRepository,
+        private readonly AbstractOrderRepository $orderRepository,
+        private readonly AbstractProductRepository $productRepository,
         private readonly MessageDispatcherInterface $messageDispatcher
     ) {
     }
+
     /**
-     * Handle a message and return a result
+     * Handle a message and return a result.
      *
      * @param RemoveProductFromOrderCommand $command
+     *
      * @return Result
      */
-    public function handle(RemoveProductFromOrderCommand $command): Result
+    public function handle($command): Result
     {
         try {
             if (!$this->validator->validate($command)) {
@@ -46,11 +45,11 @@ final class RemoveProductFromOrderHandler implements CommandHandlerInterface
             if ($order && $product) {
                 $order->removeProduct($product);
                 $this->orderRepository->save($order);
-                foreach ($order->releaseEvents() as $event) {
+                foreach ($order->getEvents() as $event) {
                     $this->messageDispatcher->dispatch($event);
                 }
                 $order->clearEvents();
-                return Result::success($command->orderId);
+                return Result::success($order);
             }
             return Result::failure(new ApplicationException('Could not remove product from order'));
         } catch (Exception $e) {

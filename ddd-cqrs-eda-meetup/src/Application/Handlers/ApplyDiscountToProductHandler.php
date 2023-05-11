@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace App\Application\Handlers;
 
 use App\Application\Commands\ApplyDiscountToProductCommand;
-use App\Domain\ProductRepositoryInterface;
-use Core\Application\ApplicationException;
+use App\Domain\AbstractProductRepository;
 use Core\Application\Handlers\CommandHandlerInterface;
-use Core\Application\MessageDispatcherInterface;
-use Core\Application\Result;
+use Core\Application\{ApplicationException, MessageDispatcherInterface, Result};
 use Core\Domain\Validators\AbstractValidator;
 use Exception;
 
@@ -17,17 +15,19 @@ class ApplyDiscountToProductHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly AbstractValidator $validator,
-        private ProductRepositoryInterface $productRepository,
+        private AbstractProductRepository $productRepository,
         private readonly MessageDispatcherInterface $messageDispatcher
     ) {
     }
+
     /**
-     * Handle a message and return a result
+     * Handle a message and return a result.
      *
-     * @param ApplyDiscountToProductCommand $message
+     * @param ApplyDiscountToProductCommand $command
+     *
      * @return Result
      */
-    public function handle(ApplyDiscountToProductCommand $command): Result
+    public function handle($command): Result
     {
         try {
             if (!$this->validator->validate($command)) {
@@ -43,7 +43,7 @@ class ApplyDiscountToProductHandler implements CommandHandlerInterface
             if ($product) {
                 $product->applyDiscount($command->discount);
                 $this->productRepository->save($product);
-                foreach ($product->releaseEvents() as $event) {
+                foreach ($product->getEvents() as $event) {
                     $this->messageDispatcher->dispatch($event);
                 }
                 $product->clearEvents();

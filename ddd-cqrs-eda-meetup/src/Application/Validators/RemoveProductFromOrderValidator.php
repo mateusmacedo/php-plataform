@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 namespace App\Application\Validators;
-use Core\Domain\FactoryMethodInterface;
-use Core\Domain\Validators\AbstractValidatorComposite;
-use Core\Domain\Validators\AttributeValidatorComposite;
 
-final class RemoveProductFromOrderValidator extends AbstractValidatorComposite implements FactoryMethodInterface
+use Core\Domain\FactoryMethodInterface;
+use Core\Domain\Validators\{AttributeValidatorComposite, ValidatorComposite};
+
+final class RemoveProductFromOrderValidator extends ValidatorComposite implements FactoryMethodInterface
 {
-    public static function create(): self
+    public static function create($data = null): self
     {
         $validators = [
             new AttributeValidatorComposite('productId', []),

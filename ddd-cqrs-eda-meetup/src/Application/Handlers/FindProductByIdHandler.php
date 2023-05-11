@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace App\Application\Handlers;
 
 use App\Application\Queries\FindProductByIdQuery;
-use App\Domain\ProductFetched;
-use App\Domain\ProductRepositoryInterface;
-use Core\Application\ApplicationException;
+use App\Domain\{AbstractProductRepository, ProductFetched};
 use Core\Application\Handlers\QueryHandlerInterface;
-use Core\Application\MessageDispatcherInterface;
-use Core\Application\Result;
+use Core\Application\{ApplicationException, MessageDispatcherInterface, Result};
 use Core\Domain\Validators\AbstractValidator;
 use Exception;
 
@@ -18,17 +15,19 @@ final class FindProductByIdHandler implements QueryHandlerInterface
 {
     public function __construct(
         private readonly AbstractValidator $validator,
-        private readonly ProductRepositoryInterface $productRepository,
+        private readonly AbstractProductRepository $productRepository,
         private readonly MessageDispatcherInterface $messageDispatcher
     ) {
     }
+
     /**
-     * Handle a message and return a result
+     * Handle a message and return a result.
      *
      * @param FindProductByIdQuery $query
+     *
      * @return Result
      */
-    public function handle(FindProductByIdQuery $query): Result
+    public function handle($query): Result
     {
         try {
             if (!$this->validator->validate($query)) {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application;
-use Core\Application\QueryInterface;
+namespace App\Application\Queries;
 
+use Core\Application\QueryInterface;
 
 final class FindDiscountForProductQuery implements QueryInterface
 {

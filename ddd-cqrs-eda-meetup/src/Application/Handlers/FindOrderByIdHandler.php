@@ -5,30 +5,29 @@ declare(strict_types=1);
 namespace App\Application\Handlers;
 
 use App\Application\Queries\FindOrderByIdQuery;
-use App\Domain\OrderFetched;
-use App\Domain\OrderRepositoryInterface;
-use Core\Application\ApplicationException;
-use Core\Application\Handlers\QueryHandlerInterface;
-use Core\Application\MessageDispatcherInterface;
-use Core\Application\Result;
+use App\Domain\{AbstractOrderRepository, OrderFetched};
+use Core\Application\Handlers\{AbstractQueryHandler, CommandHandlerInterface};
+use Core\Application\{ApplicationException, MessageDispatcherInterface, Result};
 use Core\Domain\Validators\AbstractValidator;
 use Exception;
 
-final class FindOrderByIdHandler implements QueryHandlerInterface
+final class FindOrderByIdHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly AbstractValidator $validator,
-        private readonly OrderRepositoryInterface $orderRepository,
+        private readonly AbstractOrderRepository $orderRepository,
         private readonly MessageDispatcherInterface $messageDispatcher
     ) {
     }
+
     /**
-     * Handle a message and return a result
+     * Handle a message and return a result.
      *
      * @param FindOrderByIdQuery $query
+     *
      * @return Result
      */
-    public function handle(FindOrderByIdQuery $query): Result
+    public function handle($query): Result
     {
         try {
             if (!$this->validator->validate($query)) {
@@ -42,11 +41,11 @@ final class FindOrderByIdHandler implements QueryHandlerInterface
             $order = $this->orderRepository->findById($query->orderId);
 
             if ($order) {
-                $this->messageDispatcher->dispatch(new OrderFetched($order->id));
+                $this->messageDispatcher->dispatch(new OrderFetched($query->orderId));
                 return Result::success($order);
             }
 
-            return Result::failure(new ApplicationException('Could not find order'));
+            return Result::failure(new ApplicationException('Not found'));
         } catch (Exception $e) {
             return Result::failure(new ApplicationException($e->getMessage()));
         }

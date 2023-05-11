@@ -2,52 +2,48 @@
 
 declare(strict_types=1);
 
-namespace App\Application;
+namespace App\Application\Handlers;
 
-use App\Application\CreateOrderCommand;
-use App\Domain\Order;
-use App\Domain\OrderCreated;
-use App\Domain\OrderRepositoryInterface;
-use App\Domain\ProductRepositoryInterface;
-use Core\Application\ApplicationException;
-use Core\Application\Handlers\CommandHandlerInterface;
-use Core\Application\MessageDispatcherInterface;
-use Core\Application\Result;
+use App\Application\Commands\CreateOrderCommand;
+use App\Domain\{AbstractOrderRepository, AbstractProductRepository, Order, OrderCreated};
+use Core\Application\Handlers\{AbstractCommandHandler, CommandHandlerInterface};
+use Core\Application\{ApplicationException, MessageDispatcherInterface, Result};
 use Core\Domain\Validators\AbstractValidator;
 use Exception;
 
 /**
- * Class CreateOrderHandler
+ * Class CreateOrderHandler.
  *
- * @package App\Application
  * @author Mateus Macedo Dos Anjos <macedodosanjosmateus@gmail.com>
+ *
  * @version 0.0.1
  */
 class CreateOrderHandler implements CommandHandlerInterface
 {
     /**
-     * CreateOrderHandler constructor
+     * CreateOrderHandler constructor.
      *
-     * @param AbstractValidator $validator
-     * @param OrderRepositoryInterface $orderRepository
-     * @param ProductRepositoryInterface $productRepository
+     * @param AbstractValidator          $validator
+     * @param AbstractOrderRepository    $orderRepository
+     * @param AbstractProductRepository  $productRepository
      * @param MessageDispatcherInterface $messageDispatcher
      */
     public function __construct(
         private readonly AbstractValidator $validator,
-        private readonly OrderRepositoryInterface $orderRepository,
-        private readonly ProductRepositoryInterface $productRepository,
+        private readonly AbstractOrderRepository $orderRepository,
+        private readonly AbstractProductRepository $productRepository,
         private readonly MessageDispatcherInterface $messageDispatcher
     ) {
     }
 
     /**
-     * Handle a create order command
+     * Handle a create order command.
      *
      * @param CreateOrderCommand $command
+     *
      * @return Result
      */
-    public function handle(CreateOrderCommand $command): Result
+    public function handle($command): Result
     {
         try {
             $products = $this->productRepository->findByIds($command->products);
@@ -65,10 +61,12 @@ class CreateOrderHandler implements CommandHandlerInterface
             }
 
             $order = Order::create($data);
-            $this->orderRepository->save($order);
+            $order = $this->orderRepository->save($order);
 
-            $this->messageDispatcher->dispatch(new OrderCreated($order->getProductList(), $order->id));
-
+            foreach ($order->getEvents() as $event) {
+                $this->messageDispatcher->dispatch($event);
+            }
+            $order->clearEvents();
             return Result::success($order);
         } catch (Exception $e) {
             return Result::failure(new ApplicationException($e->getMessage()));

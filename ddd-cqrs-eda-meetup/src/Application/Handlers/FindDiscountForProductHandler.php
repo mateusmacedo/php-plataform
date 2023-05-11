@@ -4,31 +4,30 @@ declare(strict_types=1);
 
 namespace App\Application\Handlers;
 
-use App\Application\Commands\ApplyDiscountToProductCommand;
-use App\Application\FindDiscountForProductQuery;
-use App\Domain\ProductRepositoryInterface;
-use Core\Application\ApplicationException;
-use Core\Application\Handlers\QueryHandlerInterface;
-use Core\Application\MessageDispatcherInterface;
-use Core\Application\Result;
+use App\Application\Queries\FindDiscountForProductQuery;
+use App\Domain\{AbstractProductRepository, ProductFetched};
+use Core\Application\Handlers\{AbstractQueryHandler, CommandHandlerInterface};
+use Core\Application\{ApplicationException, MessageDispatcherInterface, Result};
 use Core\Domain\Validators\AbstractValidator;
 use Exception;
 
-final class FindDiscountForProductHandler implements QueryHandlerInterface
+final class FindDiscountForProductHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly AbstractValidator $validator,
-        private readonly ProductRepositoryInterface $productRepository,
+        private readonly AbstractProductRepository $productRepository,
         private readonly MessageDispatcherInterface $messageDispatcher
     ) {
     }
+
     /**
-     * Handle a message and return a result
+     * Handle a message and return a result.
      *
      * @param FindDiscountForProductQuery $query
+     *
      * @return Result
      */
-    public function handle(FindDiscountForProductQuery $query): Result
+    public function handle($query): Result
     {
         try {
             if (!$this->validator->validate($query)) {
@@ -42,6 +41,7 @@ final class FindDiscountForProductHandler implements QueryHandlerInterface
             $product = $this->productRepository->findById($query->productId);
 
             if ($product) {
+                $this->messageDispatcher->dispatch(new ProductFetched($query->productId));
                 return Result::success(0.1);
             }
 
