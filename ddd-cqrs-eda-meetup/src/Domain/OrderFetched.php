@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 namespace App\Domain;
+
 use Core\Application\EventInterface;
 use Core\Domain\AbstractDomainEvent;
+use DateTimeImmutable;
 
 final class OrderFetched extends AbstractDomainEvent implements EventInterface
 {
@@ -13,7 +15,7 @@ final class OrderFetched extends AbstractDomainEvent implements EventInterface
         parent::__construct(
             eventType: 'order_fetched',
             eventId: uniqid(),
-            occurredOn: (new \DateTimeImmutable())->format(\DateTimeImmutable::ISO8601),
+            occurredOn: (new DateTimeImmutable())->format(DateTimeImmutable::ISO8601),
             aggregateId: $orderId
         );
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain;
 
 use Core\Domain\AbstractDomainEvent;
+use DateTimeImmutable;
 
 final class ProductAddedToOrder extends AbstractDomainEvent
 {
@@ -13,7 +14,7 @@ final class ProductAddedToOrder extends AbstractDomainEvent
         parent::__construct(
             eventType: 'product_added_to_order',
             eventId: uniqid(),
-            occurredOn: (new \DateTimeImmutable())->format(\DateTimeImmutable::ISO8601),
+            occurredOn: (new DateTimeImmutable())->format(DateTimeImmutable::ISO8601),
             aggregateId: $orderId
         );
     }

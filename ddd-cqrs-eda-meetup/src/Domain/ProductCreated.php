@@ -11,9 +11,6 @@ use DateTimeImmutable;
 final class ProductCreated extends AbstractDomainEvent implements EventInterface
 {
     public function __construct(
-        public readonly string $name,
-        public readonly string $description,
-        public readonly float $price,
         string $productId,
     ) {
         parent::__construct(

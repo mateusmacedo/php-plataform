@@ -4,34 +4,32 @@ declare(strict_types=1);
 
 namespace App\Domain;
 
-use App\Domain\ProductAddedToOrder;
-use App\Domain\ProductRemovedFromOrder;
-use Core\Domain\AbstractAggregateRoot;
-use Core\Domain\DomainException;
-use Core\Domain\FactoryMethodInterface;
+use App\Domain\{ProductAddedToOrder, ProductRemovedFromOrder};
+use Core\Domain\{AbstractAggregateRoot, DomainException, FactoryMethodInterface};
 use DateTimeImmutable;
 use Ds\Map;
 use Generator;
 
 /**
- * Class Order
+ * Class Order.
  *
- * @package App\Domain
  * @author Mateus Macedo Dos Anjos <macedodosanjosmateus@gmail.com>
+ *
  * @version 0.0.1
  */
-final class Order extends AbstractAggregateRoot implements FactoryMethodInterface
+class Order extends AbstractAggregateRoot implements FactoryMethodInterface
 {
     private Map $products;
 
     /**
      * Order constructor.
      *
-     * @param string|null $id
-     * @param string|null $createdAt
-     * @param string|null $updatedAt
-     * @param string|null $deletedAt
-     * @param array $products
+     * @param null|string $id
+     * @param null|string $createdAt
+     * @param null|string $updatedAt
+     * @param null|string $deletedAt
+     * @param array       $products
+     *
      * @throws DomainException
      */
     public function __construct(
@@ -41,23 +39,22 @@ final class Order extends AbstractAggregateRoot implements FactoryMethodInterfac
         ?string $deletedAt = null,
         array $products = []
     ) {
+        parent::__construct($id, $createdAt, $updatedAt, $deletedAt);
+        $this->products = new Map();
         // TODO: In the future, think about moving this logic to a another block of code
-        $products = new Map();
         foreach ($products as $product) {
             if (!$product instanceof Product) {
                 throw new DomainException('Invalid product');
             }
-            $products->put($product->id, $product);
+            $this->products->put($product->id, $product);
         }
-
-        parent::__construct($id, $createdAt, $updatedAt, $deletedAt);
-        $this->products = $products;
     }
 
     /**
-     * Method to add a product to the order
+     * Method to add a product to the order.
      *
      * @param Product $product
+     *
      * @throws DomainException
      */
     public function addProduct(Product $product): void
@@ -71,30 +68,33 @@ final class Order extends AbstractAggregateRoot implements FactoryMethodInterfac
     }
 
     /**
-     * Method to get a product from the order
+     * Method to get a product from the order.
      *
      * @param Product $product
+     *
      * @return Product
+     *
      * @throws DomainException
      */
     public function getProduct(Product $product): Product
     {
-        $result = $this->products->get($product->id);
+        $result = $this->products->hasKey($product->id);
         if (!$result) {
             throw new DomainException('Product does not exist in order');
         }
-        return $result;
+        return $this->products->get($product->id);
     }
 
     /**
-     * Method to remove a product from the order
+     * Method to remove a product from the order.
      *
      * @param Product $product
+     *
      * @throws DomainException
      */
     public function removeProduct(Product $product): void
     {
-        if (!$this->products->get($product->id)) {
+        if (!$this->products->hasKey($product->id)) {
             throw new DomainException('Product does not exist in order');
         }
 
@@ -103,7 +103,7 @@ final class Order extends AbstractAggregateRoot implements FactoryMethodInterfac
     }
 
     /**
-     * Method to get all products from the order
+     * Method to get all products from the order.
      *
      * @return Generator
      */
@@ -120,20 +120,23 @@ final class Order extends AbstractAggregateRoot implements FactoryMethodInterfac
     }
 
     /**
-     * Method to create a new instance of the Order class
+     * Method to create a new instance of the Order class.
      *
      * @param array $data
+     *
      * @return Order
      */
-    public static function create(array $data): Order
+    public static function create($data = null): Order
     {
         $now = (new DateTimeImmutable())->format(DateTimeImmutable::ISO8601);
-        return new Order(
+        $order = new Order(
             $data['id'] ?? null,
             $data['createdAt'] ?? $now,
             $data['updatedAt'] ?? $now,
             $data['deletedAt'] ?? null,
             $data['products'] ?? []
         );
+        $order->record(new OrderCreated($order->getProductList(), $order->id));
+        return $order;
     }
 }

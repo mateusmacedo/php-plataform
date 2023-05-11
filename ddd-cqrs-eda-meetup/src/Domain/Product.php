@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain;
 
-use Core\Domain\AbstractAggregateRoot;
-use Core\Domain\FactoryMethodInterface;
+use Core\Domain\{AbstractAggregateRoot, FactoryMethodInterface};
 use DateTimeImmutable;
 
 class Product extends AbstractAggregateRoot implements FactoryMethodInterface
 {
     public function __construct(
-        ?string $id,
+        ?string $id = null,
         protected ?string $name = null,
         protected ?string $description = null,
         protected ?float $price = null,
@@ -20,6 +19,21 @@ class Product extends AbstractAggregateRoot implements FactoryMethodInterface
         ?string $deletedAt = null,
     ) {
         parent::__construct($id, $createdAt, $updatedAt, $deletedAt);
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function getPrice(): float
+    {
+        return $this->price;
     }
 
     public function applyDiscount(float $discount): void
@@ -34,15 +48,16 @@ class Product extends AbstractAggregateRoot implements FactoryMethodInterface
     }
 
     /**
-     * Method to create a new instance of the class
+     * Method to create a new instance of the class.
      *
-     * @param mixed $data
+     * @param array $data
+     *
      * @return mixed
      */
-    public static function create($data)
+    public static function create($data = null)
     {
         $now = (new DateTimeImmutable())->format(DateTimeImmutable::ISO8601);
-        return new self(
+        $result = new self(
             $data['id'] ?? null,
             $data['name'] ?? null,
             $data['description'] ?? null,
@@ -50,5 +65,7 @@ class Product extends AbstractAggregateRoot implements FactoryMethodInterface
             $now,
             $now
         );
+        $result->record(new ProductCreated($result->id));
+        return $result;
     }
 }

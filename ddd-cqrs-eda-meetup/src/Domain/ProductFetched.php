@@ -6,6 +6,7 @@ namespace App\Domain;
 
 use Core\Application\EventInterface;
 use Core\Domain\AbstractDomainEvent;
+use DateTimeImmutable;
 
 final class ProductFetched extends AbstractDomainEvent implements EventInterface
 {
@@ -14,7 +15,7 @@ final class ProductFetched extends AbstractDomainEvent implements EventInterface
         parent::__construct(
             eventType: 'product_fetched',
             eventId: uniqid(),
-            occurredOn: (new \DateTimeImmutable())->format(\DateTimeImmutable::ISO8601),
+            occurredOn: (new DateTimeImmutable())->format(DateTimeImmutable::ISO8601),
             aggregateId: $productId
         );
     }
