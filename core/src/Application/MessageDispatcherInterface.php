@@ -9,7 +9,7 @@ interface MessageDispatcherInterface
     /**
      * Dispatch a message.
      *
-     * @param MessageInterface $message
+     * @param CommandInterface|QueryInterface|EventInterface $message
      */
-    public function dispatch(MessageInterface $message, array $metadata = []): void;
+    public function dispatch(CommandInterface|QueryInterface|EventInterface $message, array $metadata = []): void;
 }

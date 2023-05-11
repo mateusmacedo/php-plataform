@@ -13,12 +13,5 @@ namespace Core\Domain;
  */
 interface ReadRepositoryInterface
 {
-    /**
-     * Find an aggregate root by id.
-     *
-     * @param string $id
-     *
-     * @return null|AbstractAggregateRoot
-     */
-    public function find(string $id): ?AbstractAggregateRoot;
+    public function find($id);
 }

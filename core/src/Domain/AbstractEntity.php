@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace Core\Domain;
+use DateTimeImmutable;
 
 /**
  * Class AbstractEntity represents an abstract entity is base class for all entities.
@@ -24,8 +25,23 @@ abstract class AbstractEntity
     public function __construct(
         public readonly ?string $id = null,
         public readonly ?string $createdAt = null,
-        public readonly ?string $updatedAt = null,
-        public readonly ?string $deletedAt = null
+        protected ?string $updatedAt = null,
+        protected ?string $deletedAt = null
     ) {
+    }
+
+    public function getUpdatedAt(): ?string
+    {
+        return $this->updatedAt;
+    }
+
+    public function getDeletedAt(): ?string
+    {
+        return $this->deletedAt;
+    }
+
+    public function itsDeleted(): bool
+    {
+        return $this->deletedAt !== null;
     }
 }

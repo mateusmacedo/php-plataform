@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Core\Application\Handlers;
 
-use Core\Application\MessageInterface;
+use Core\Application\CommandInterface;
+use Core\Application\EventInterface;
+use Core\Application\QueryInterface;
 use Core\Application\Result;
 
 /**
@@ -19,9 +21,9 @@ interface HandlerInterface
     /**
      * Handle a message and return a result.
      *
-     * @param MessageInterface $message
+     * @param CommandInterface|QueryInterface|EventInterface $message
      *
      * @return Result
      */
-    public function handle(MessageInterface $message): Result;
+    public function handle(CommandInterface|QueryInterface|EventInterface $message): Result;
 }

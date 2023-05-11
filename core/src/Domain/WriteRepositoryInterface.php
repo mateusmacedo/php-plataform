@@ -13,10 +13,5 @@ namespace Core\Domain;
  */
 interface WriteRepositoryInterface
 {
-    /**
-     * Save an aggregate root.
-     *
-     * @param AbstractAggregateRoot $aggregateRoot
-     */
-    public function save(AbstractAggregateRoot $aggregateRoot): void;
+    public function save($aggregateRoot);
 }

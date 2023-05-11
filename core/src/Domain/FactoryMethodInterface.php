@@ -20,5 +20,5 @@ interface FactoryMethodInterface
      *
      * @return mixed
      */
-    public static function create($data);
+    public static function create($data = null);
 }

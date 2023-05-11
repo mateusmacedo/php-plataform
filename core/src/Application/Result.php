@@ -41,11 +41,11 @@ class Result
     /**
      * Failure constructor.
      *
-     * @param Exception $error
+     * @param ApplicationException $error
      *
      * @return Result
      */
-    public static function failure(Exception $error): Result
+    public static function failure(ApplicationException $error): Result
     {
         return new self(false, null, $error);
     }
