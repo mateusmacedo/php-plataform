@@ -7,10 +7,9 @@ namespace Core\Application;
 interface MessageDispatcherInterface
 {
     /**
-     * Dispatch a message
+     * Dispatch a message.
      *
      * @param MessageInterface $message
-     * @return void
      */
     public function dispatch(MessageInterface $message, array $metadata = []): void;
 }

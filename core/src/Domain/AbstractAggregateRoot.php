@@ -10,8 +10,8 @@ use SplObjectStorage;
 /**
  * Class AbstractAggregateRoot represents an abstract aggregate root is base class for all aggregate roots.
  *
- * @package App\Domain\Contracts
  * @author Mateus Macedo Dos Anjos <macedodosanjosmateus@gmail.com>
+ *
  * @version 0.0.1
  */
 abstract class AbstractAggregateRoot extends AbstractEntity
@@ -21,10 +21,10 @@ abstract class AbstractAggregateRoot extends AbstractEntity
     /**
      * AbstractAggregateRoot constructor is responsible for construct a new abstract aggregate root.
      *
-     * @param string|null $id
-     * @param string|null $createdAt
-     * @param string|null $updatedAt
-     * @param string|null $deletedAt
+     * @param null|string $id
+     * @param null|string $createdAt
+     * @param null|string $updatedAt
+     * @param null|string $deletedAt
      */
     public function __construct(
         ?string $id = null,
@@ -37,21 +37,21 @@ abstract class AbstractAggregateRoot extends AbstractEntity
     }
 
     /**
-     * Method to add a event to the aggregate root
+     * Method to add a event to the aggregate root.
      *
      * @param AbstractDomainEvent $event
      */
-    protected function record(AbstractDomainEvent $event): void
+    public function record(AbstractDomainEvent $event): void
     {
         $this->events->attach($event);
     }
 
     /**
-     * Method to get all events of the aggregate root
+     * Method to get all events of the aggregate root.
      *
      * @return Generator
      */
-    public function releaseEvents(): Generator
+    public function getEvents(): Generator
     {
         foreach ($this->events as $event) {
             yield $event;
@@ -59,7 +59,7 @@ abstract class AbstractAggregateRoot extends AbstractEntity
     }
 
     /**
-     * Method to clear all events of the aggregate root
+     * Method to clear all events of the aggregate root.
      */
     public function clearEvents(): void
     {
