@@ -37,8 +37,9 @@ class AttributeValidatorComposite extends ValidatorComposite
 
     public function getError(): DomainException | null
     {
-        if ($this->error->isEmpty()) {
-            return new DomainException(implode(', ', $this->getErrorMessage()));
+        if (!$this->error->isEmpty()) {
+            $implodedErrors = implode(', ', $this->getErrorMessage()[$this->attribute]);
+            return new DomainException($implodedErrors);
         }
         return null;
     }

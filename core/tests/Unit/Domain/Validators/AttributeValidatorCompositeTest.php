@@ -21,7 +21,7 @@ final class AttributeValidatorCompositeTest extends BaseTestCase
     {
         parent::setUp();
         $this->attribute = 'attribute';
-        $this->domainException = new DomainException('');
+        $this->domainException = new DomainException('error message');
         $this->validatorOne = new ValidatorStubOne();
         $this->validatorTwo = new ValidatorStubTwo();
         $this->sut = new AttributeValidatorComposite($this->attribute, [$this->validatorOne, $this->validatorTwo]);
@@ -89,7 +89,18 @@ final class AttributeValidatorCompositeTest extends BaseTestCase
 
     public function testGetError(): void
     {
+        $mockedValidatorOne = $this->createMock(ValidatorStubOne::class);
+        $mockedValidatorOne->method('validate')->willReturn(false);
+        $mockedValidatorOne->method('getError')->willReturn($this->domainException);
+        $this->sut = new AttributeValidatorComposite($this->attribute, [$mockedValidatorOne]);
+        $this->sut->validate(['attribute' => 'value']);
         $this->assertEquals($this->domainException, $this->sut->getError());
+    }
+
+    public function testGetErrorWithNoErrors(): void
+    {
+        $this->sut->validate(['attribute' => 'value']);
+        $this->assertNull($this->sut->getError());
     }
 
     public function testValidateWithArrayData(): void
