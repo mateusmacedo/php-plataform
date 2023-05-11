@@ -2,6 +2,15 @@
     "name": "mateusmacedo/php-plataform-ddd-cqrs-eda-meetup",
     "description": "Code of the presentation about DDD, CQRS and EDA",
     "type": "library",
+    "keywords": [
+        "ddd",
+        "cqrs",
+        "eda",
+        "meetup"
+    ],
+    "require": {
+        "mateusmacedo/php-plataform-core": "0.0.1"
+    },
     "require-dev": {
         "fakerphp/faker": "2.x-dev",
         "friendsofphp/php-cs-fixer": "dev-master",
@@ -45,14 +54,23 @@
         "lint-fix": "vendor/bin/php-cs-fixer fix .",
         "lint-validation": "vendor/bin/php-cs-fixer fix -v --using-cache no --dry-run --stop-on-violation",
         "unit-test": "php -d memory_limit=-1 vendor/bin/phpunit --testdox --no-coverage --configuration phpunit.xml",
-        "unit-test-cov": "XDEBUG_MODE=coverage php -d memory_limit=-1 vendor/bin/phpunit --testdox --coverage-text --configuration phpunit.xml",
-        "test-coverage-html": "XDEBUG_MODE=coverage php -d memory_limit=-1 vendor/bin/phpunit --coverage-html=coverage --configuration phpunit.xml",
-        "unit-test:report": "php -d memory_limit=-1 vendor/bin/phpunit --testdox --coverage-text --colors=never --log-junit ${REPORT_PATH}logfile.xml --coverage-clover ${REPORT_PATH}coverage.xml --configuration phpunit.xml",
+        "unit-test:cov-text": "XDEBUG_MODE=coverage php -d memory_limit=-1 vendor/bin/phpunit --testdox --coverage-text --configuration phpunit.xml",
+        "unit-test:cov-html": "XDEBUG_MODE=coverage php -d memory_limit=-1 vendor/bin/phpunit --coverage-html=coverage --configuration phpunit.xml",
+        "unit-test:report": "XDEBUG_MODE=coverage php -d memory_limit=-1 vendor/bin/phpunit --testdox --coverage-text --log-junit ${REPORT_PATH}logfile.xml --coverage-clover ${REPORT_PATH}coverage.xml --configuration phpunit.xml",
         "changelog": "conventional-changelog",
         "release": "conventional-changelog --commit",
         "release:patch": "conventional-changelog --patch --commit",
         "release:minor": "conventional-changelog --minor --commit",
         "release:major": "conventional-changelog --major --commit"
     },
-    "version": "0.0.1"
+    "version": "0.0.1",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../core",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
 }
