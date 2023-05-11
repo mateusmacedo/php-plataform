@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Application\Stubs;
 
-use Core\Application\MessageInterface;
+use Core\Application\CommandInterface;
 
-final class CommandStub implements MessageInterface
+final class CommandStub implements CommandInterface
 {
 }

@@ -26,10 +26,15 @@ class ValidatorComposite extends AbstractValidator
 
     public function addValidator(AbstractValidator $validator): void
     {
+
         if ($this->validators->hasKey(get_class($validator))) {
             throw new DomainException('Validator already exists');
         }
-        $this->validators->put(get_class($validator), $validator);
+        if (($validator instanceof AttributeValidatorComposite && $validator->attribute !== null) || ($validator instanceof AttributeValidator && $validator->attribute !== null)) {
+            $this->validators->put(get_class($validator) . $validator->attribute, $validator);
+        } else {
+            $this->validators->put(get_class($validator), $validator);
+        }
     }
 
     public function getValidator(string $validator): AbstractValidator

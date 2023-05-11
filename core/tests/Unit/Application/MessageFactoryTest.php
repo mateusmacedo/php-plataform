@@ -47,8 +47,8 @@ final class MessageFactoryTest extends BaseTestCase
     public function testExistsWithCorrectParams(): void
     {
         $this->sut = new MessageFactory(MessageEnumStub::class);
-        $this->assertTrue($this->sut->exists(CommandStub::class));
-        $this->assertTrue($this->sut->exists(QueryStub::class));
+        $this->assertTrue($this->sut->exists('COMMAND'));
+        $this->assertTrue($this->sut->exists('QUERY'));
         $this->assertFalse($this->sut->exists('action_3'));
     }
 
@@ -61,8 +61,8 @@ final class MessageFactoryTest extends BaseTestCase
     public function testCreateWithCorrectParams(): void
     {
         $this->sut = new MessageFactory(MessageEnumStub::class);
-        $this->assertInstanceOf(CommandStub::class, $this->sut->create(CommandStub::class, []));
-        $this->assertInstanceOf(QueryStub::class, $this->sut->create(QueryStub::class, []));
+        $this->assertInstanceOf(CommandStub::class, $this->sut->create('COMMAND', []));
+        $this->assertInstanceOf(QueryStub::class, $this->sut->create('QUERY', []));
     }
 
     public function testCreateWithIncorrectParams(): void
@@ -78,8 +78,8 @@ final class MessageFactoryTest extends BaseTestCase
         $this->assertCount(2, $this->sut->list());
         $this->assertEquals(
             [
-                0 => CommandStub::class,
-                1 => QueryStub::class,
+                0 => 'COMMAND',
+                1 => 'QUERY',
             ],
             $this->sut->list()
         );

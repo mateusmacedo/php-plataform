@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Application\Stubs;
 
-use Core\Application\MessageInterface;
+use Core\Application\QueryInterface;
 
-final class QueryStub implements MessageInterface
+final class QueryStub implements QueryInterface
 {
 }
