@@ -4,24 +4,36 @@ declare(strict_types=1);
 
 namespace App\Infraestructure\Database;
 
-use App\Domain\Product;
-use App\Domain\ProductRepositoryInterface;
+use App\Domain\{AbstractProductRepository, Product};
 
-final class InMemoryProductRepository implements ProductRepositoryInterface
+final class InMemoryProductRepository extends AbstractProductRepository
 {
     private array $products = [];
 
     /**
+     * Save an aggregate root.
+     *
      * @param Product $product
      */
-    public function save(Product $product): void
+    public function save($product): void
     {
-        $this->products[$product->getId()] = $product;
+        $this->products[$product->id] = $product;
     }
 
     /**
      * @param string $id
-     * @return Product|null
+     *
+     * @return null|Product
+     */
+    public function find($id): ?Product
+    {
+        return $this->products[$id] ?? null;
+    }
+
+    /**
+     * @param string $id
+     *
+     * @return null|Product
      */
     public function findById(string $id): ?Product
     {
@@ -30,23 +42,13 @@ final class InMemoryProductRepository implements ProductRepositoryInterface
 
     /**
      * @param array $ids
+     *
      * @return array
      */
     public function findByIds(array $ids): array
     {
         return array_filter($this->products, function (Product $product) use ($ids) {
-            return in_array($product->getId(), $ids);
+            return in_array($product->id, $ids);
         });
-    }
-
-    /**
-     * Find an aggregate root by id.
-     *
-     * @param string $id
-     * @return Product|null
-     */
-    public function find(string $id): ?Product
-    {
-        return $this->products[$id] ?? null;
     }
 }

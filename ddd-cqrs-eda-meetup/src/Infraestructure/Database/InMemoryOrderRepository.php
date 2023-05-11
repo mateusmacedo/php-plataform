@@ -4,20 +4,39 @@ declare(strict_types=1);
 
 namespace App\Infraestructure\Database;
 
-use App\Domain\Order;
-use App\Domain\OrderRepositoryInterface;
+use App\Domain\{AbstractOrderRepository, Order};
 
-final class InMemoryOrderRepository implements OrderRepositoryInterface
+final class InMemoryOrderRepository extends AbstractOrderRepository
 {
     private array $orders = [];
 
-    public function save(Order $order): void
-    {
-        $this->orders[$order->getId()] = $order;
-    }
-
-    public function findById(string $id): ?Order
+    /**
+     * @param string $id
+     *
+     * @return null|Order
+     */
+    public function find($id): ?Order
     {
         return $this->orders[$id] ?? null;
+    }
+
+    /**
+     * @param string $id
+     *
+     * @return null|Order
+     */
+    public function findById(string $id): ?Order
+    {
+        return $this->find($id);
+    }
+
+    /**
+     * Save an aggregate root.
+     *
+     * @param Order $aggregateRoot
+     */
+    public function save($aggregateRoot): void
+    {
+        $this->orders[$aggregateRoot->id] = $aggregateRoot;
     }
 }

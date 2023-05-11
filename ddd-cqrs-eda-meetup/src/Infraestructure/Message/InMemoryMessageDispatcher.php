@@ -10,13 +10,17 @@ final class InMemoryMessageDispatcher implements MessageDispatcherInterface
 {
     private array $handlers = [];
 
-    public function dispatch(object $message): void
+    public function dispatch(object $message, ?array $metadata = []): void
     {
-        $this->handlers[get_class($message)]($message);
+        if (isset($this->handlers[get_class($message)])) {
+            foreach ($this->handlers[get_class($message)] as $handler) {
+                $handler($message, $metadata);
+            }
+        }
     }
 
     public function addHandler(string $messageClass, callable $handler): void
     {
-        $this->handlers[$messageClass] = $handler;
+        $this->handlers[$messageClass][] = $handler;
     }
 }
