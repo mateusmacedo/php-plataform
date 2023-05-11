@@ -8,7 +8,7 @@ use Core\Domain\DomainException;
 use Ds\Map;
 use Generator;
 
-abstract class AbstractValidatorComposite extends AbstractValidator
+class ValidatorComposite extends AbstractValidator
 {
     protected Map $validators;
 
@@ -18,7 +18,7 @@ abstract class AbstractValidatorComposite extends AbstractValidator
         $this->validators = new Map();
         foreach ($validators as $validator) {
             if (!$validator instanceof AbstractValidator) {
-                throw new DomainException("Invalid validator");
+                throw new DomainException('Invalid validator');
             }
             $this->addValidator($validator);
         }
@@ -27,7 +27,7 @@ abstract class AbstractValidatorComposite extends AbstractValidator
     public function addValidator(AbstractValidator $validator): void
     {
         if ($this->validators->hasKey(get_class($validator))) {
-            throw new DomainException("Validator already exists");
+            throw new DomainException('Validator already exists');
         }
         $this->validators->put(get_class($validator), $validator);
     }
@@ -35,7 +35,7 @@ abstract class AbstractValidatorComposite extends AbstractValidator
     public function getValidator(string $validator): AbstractValidator
     {
         if (!$this->validators->hasKey($validator)) {
-            throw new DomainException("Validator does not exist");
+            throw new DomainException('Validator does not exist');
         }
         return $this->validators->get($validator);
     }
@@ -48,7 +48,7 @@ abstract class AbstractValidatorComposite extends AbstractValidator
     public function removeValidator(AbstractValidator $validator): void
     {
         if (!$this->validators->hasKey(get_class($validator))) {
-            throw new DomainException("Validator does not exist");
+            throw new DomainException('Validator does not exist');
         }
         $this->validators->remove(get_class($validator));
     }
@@ -66,13 +66,6 @@ abstract class AbstractValidatorComposite extends AbstractValidator
         return $result;
     }
 
-    private function getErrors(): Generator
-    {
-        foreach ($this->error as $error) {
-            yield $error;
-        }
-    }
-
     public function getErrorMessage(): array
     {
         $errors = [];
@@ -82,8 +75,18 @@ abstract class AbstractValidatorComposite extends AbstractValidator
         return $errors;
     }
 
-    public function getError(): DomainException
+    public function getError(): DomainException|null
     {
-        return new DomainException(implode(", ", $this->getErrorMessage()));
+        if (!$this->error->isEmpty()) {
+            return new DomainException(implode(', ', $this->getErrorMessage()));
+        }
+        return null;
+    }
+
+    private function getErrors(): Generator
+    {
+        foreach ($this->error as $error) {
+            yield $error;
+        }
     }
 }

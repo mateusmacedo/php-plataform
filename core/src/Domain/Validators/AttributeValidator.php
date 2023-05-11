@@ -6,10 +6,8 @@ namespace Core\Domain\Validators;
 
 use Core\Domain\DomainException;
 
-
 /**
- * Class AttributeValidator
- * @package Core\Domain\Validators
+ * Class AttributeValidator.
  */
 class AttributeValidator extends AbstractValidator
 {
@@ -19,6 +17,7 @@ class AttributeValidator extends AbstractValidator
 
     /**
      * @param mixed $input
+     *
      * @return bool
      */
     public function validate(mixed $input): bool
@@ -35,9 +34,9 @@ class AttributeValidator extends AbstractValidator
     }
 
     /**
-     * @return string
+     * @return mixed
      */
-    public function getErrorMessage(): string
+    public function getErrorMessage()
     {
         return $this->validator->getErrorMessage();
     }

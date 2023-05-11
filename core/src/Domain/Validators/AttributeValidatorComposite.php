@@ -6,37 +6,50 @@ namespace Core\Domain\Validators;
 
 use Core\Domain\DomainException;
 
-class AttributeValidatorComposite extends AbstractValidatorComposite
+class AttributeValidatorComposite extends ValidatorComposite
 {
     public function __construct(public readonly string $attribute, array $validators = [])
     {
-        parent::__construct(...$validators);
+        parent::__construct($validators);
     }
 
     public function validate(mixed $input): bool
     {
-        foreach ($input as $key => $value) {
-            if ($key === $this->attribute) {
-                foreach ($this->getValidators() as $validator) {
-                    if (!$validator->validate($value)) {
-                        $this->error->put($key, $validator->getError());
-                    }
-                }
+        if (is_object($input)) {
+            $input = (array) $input;
+        }
+
+        if (!array_key_exists($this->attribute, $input)) {
+            return true;
+        }
+
+        $errors = [];
+        foreach ($this->getValidators() as $validator) {
+            if (!$validator->validate($input[$this->attribute])) {
+                $errors[] = $validator->getError();
             }
+        }
+        if (!empty($errors)) {
+            $this->error->put($this->attribute, $errors);
         }
         return $this->error->isEmpty();
     }
 
-    public function getError(): DomainException
+    public function getError(): DomainException | null
     {
-        return new DomainException(implode(', ', $this->getErrorMessage()));
+        if ($this->error->isEmpty()) {
+            return new DomainException(implode(', ', $this->getErrorMessage()));
+        }
+        return null;
     }
 
     public function getErrorMessage(): array
     {
         $errors = [];
-        foreach ($this->error as $key => $value) {
-            $errors[$key] = $value;
+        foreach ($this->error as $attributeKey => $attributeErros) {
+            foreach ($attributeErros as $value) {
+                $errors[$attributeKey][] = $value->getMessage();
+            }
         }
         return $errors;
     }
