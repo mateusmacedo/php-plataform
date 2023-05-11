@@ -56,7 +56,7 @@ return (new PhpCsFixer\Config())
         'no_superfluous_phpdoc_tags' => false,
         'yoda_style' => ['always_move_variable' => false, 'equal' => true, 'identical' => true, 'less_and_greater' => null],
         'fully_qualified_strict_types' => true,
-        'group_import' => true,
+        'group_import' => false,
         'no_unneeded_import_alias' => true,
         'global_namespace_import' => [
             'import_classes' => true,
