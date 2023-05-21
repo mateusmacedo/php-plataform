@@ -37,6 +37,7 @@ final class AbstractAggregateRootTest extends BaseTestCase
         $this->assertEquals($this->createdAt, $this->sut->createdAt);
         $this->assertEquals($this->updatedAt, $this->sut->getUpdatedAt());
         $this->assertEquals($this->deletedAt, $this->sut->getDeletedAt());
+        $this->assertTrue($this->sut->itsDeleted());
         $events = [];
         foreach ($this->sut->getEvents() as $event) {
             $events[] = $event;
@@ -51,6 +52,7 @@ final class AbstractAggregateRootTest extends BaseTestCase
         $this->assertNull($this->sut->createdAt);
         $this->assertNull($this->sut->getUpdatedAt());
         $this->assertNull($this->sut->getDeletedAt());
+        $this->assertFalse($this->sut->itsDeleted());
         $events = [];
         foreach ($this->sut->getEvents() as $event) {
             $events[] = $event;

@@ -5,93 +5,107 @@ declare(strict_types=1);
 namespace Core\Domain\Validators;
 
 use Core\Domain\DomainException;
+use Core\Utils\DeepCloneTrait;
+use Countable;
+use DeepCopy\DeepCopy;
 use Ds\Map;
 use Generator;
+use IteratorAggregate;
+use ReflectionClass;
+use Traversable;
 
-class ValidatorComposite extends AbstractValidator
+class ValidatorComposite implements ValidatorInterface, Countable, IteratorAggregate
 {
+    use DeepCloneTrait;
     protected Map $validators;
+    protected Map $messages;
 
-    public function __construct(array $validators = [])
+    public function __construct(private ?string $key=null)
     {
-        $this->error = new Map();
         $this->validators = new Map();
-        foreach ($validators as $validator) {
-            if (!$validator instanceof AbstractValidator) {
-                throw new DomainException('Invalid validator');
+        $this->messages = new Map();
+    }
+
+    public function count(): int
+    {
+        return $this->validators->count();
+    }
+
+    public function getIterator(): Traversable|array
+    {
+        return $this->validators->getIterator();
+    }
+
+    public function getKey(): string
+    {
+        if (isset($this->key)) {
+            return $this->key;
+        }
+
+        $this->key = (new ReflectionClass($this))->getShortName();
+        $length = strlen($this->key);
+        $stringSpace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $stringSpace[rand(0, strlen($stringSpace) - 1)];
+        }
+
+        $this->key = "{$this->key}.{$randomString}";
+
+        return $this->key;
+	}
+
+    public function addValidator(ValidatorInterface $validator): self
+    {
+        $key = $validator->getKey();
+        if ($this->validators->hasKey($key)) {
+            throw new DomainException("Validator {$key} already exists");
+        }
+        $this->validators->put($key, $validator);
+        return $this;
+    }
+
+    public function removeValidator(ValidatorInterface $validator): self
+    {
+        $key = $validator->getKey();
+        if (!isset($this->validators[$key])) {
+            throw new DomainException("Validator {$key} not found");
+        }
+        unset($this->validators[$key]);
+        return $this;
+    }
+
+    public function isValid($value)
+    {
+        if (is_array($value)) {
+            return $this->isValidRecursive($value);
+        }
+        $this->messages->clear();
+        foreach ($this as $validator) {
+            if (!$validator->isValid($value)) {
+                $this->messages->put($validator->getKey(), $validator->getMessages());
             }
-            $this->addValidator($validator);
         }
+        return $this->messages->isEmpty();
     }
 
-    public function addValidator(AbstractValidator $validator): void
+    private function isValidRecursive(Traversable | array $value)
     {
-
-        if ($this->validators->hasKey(get_class($validator))) {
-            throw new DomainException('Validator already exists');
-        }
-        if (($validator instanceof AttributeValidatorComposite && $validator->attribute !== null) || ($validator instanceof AttributeValidator && $validator->attribute !== null)) {
-            $this->validators->put(get_class($validator) . $validator->attribute, $validator);
-        } else {
-            $this->validators->put(get_class($validator), $validator);
-        }
-    }
-
-    public function getValidator(string $validator): AbstractValidator
-    {
-        if (!$this->validators->hasKey($validator)) {
-            throw new DomainException('Validator does not exist');
-        }
-        return $this->validators->get($validator);
-    }
-
-    public function getValidators(): Map
-    {
-        return $this->validators;
-    }
-
-    public function removeValidator(AbstractValidator $validator): void
-    {
-        if (!$this->validators->hasKey(get_class($validator))) {
-            throw new DomainException('Validator does not exist');
-        }
-        $this->validators->remove(get_class($validator));
-    }
-
-    public function validate(mixed $input): bool
-    {
-        $this->error->clear();
-        $result = true;
-        foreach ($this->validators as $validator) {
-            if (!$validator->validate($input)) {
-                $this->error->put(get_class($validator), $validator->getError());
-                $result = false;
+        foreach($value as $key => $item) {
+            $clone = $this->clone();
+            if (!$clone->isValid($item)) {
+                $this->messages->put($key, $clone->getMessages());
             }
         }
-        return $result;
+        return $this->messages->isEmpty();
     }
 
-    public function getErrorMessage(): array
+    public function getMessages(): array
     {
-        $errors = [];
-        foreach ($this->getErrors() as $error) {
-            $errors[] = $error->getMessage();
+        $messages = [];
+        foreach ($this->messages as $key => $message) {
+            $messages[$key] = $message;
         }
-        return $errors;
-    }
-
-    public function getError(): DomainException|null
-    {
-        if (!$this->error->isEmpty()) {
-            return new DomainException(implode(', ', $this->getErrorMessage()));
-        }
-        return null;
-    }
-
-    private function getErrors(): Generator
-    {
-        foreach ($this->error as $error) {
-            yield $error;
-        }
+        return $messages;
     }
 }

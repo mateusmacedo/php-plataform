@@ -4,157 +4,200 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Validators;
 
-use Core\Domain\{
-    DomainException,
-    Validators\AbstractValidator,
-    Validators\ValidatorComposite
-};
-use stdClass;
+use Core\Domain\Validators\ValidatorComposite;
 use Tests\BaseTestCase;
-use Tests\Unit\Domain\Validators\Stubs\{
-    ValidatorStubOne,
-    ValidatorStubTwo
-};
 
 final class ValidatorCompositeTest extends BaseTestCase
 {
-    public ValidatorComposite $sut;
-    public AbstractValidator $validatorOne;
-    public AbstractValidator $validatorTwo;
+    private ValidatorComposite $sut;
 
-    public function setUp(): void
+    protected function createValidator(bool $isvalid, array $messages, string $key): ValidatorStub
     {
-        parent::setUp();
-        $this->validatorOne = new ValidatorStubOne();
-        $this->validatorTwo = new ValidatorStubTwo();
-        $this->sut = new ValidatorComposite([
-            $this->validatorOne,
-            $this->validatorTwo
-        ]);
+        $closure = function ($value) use ($isvalid) {
+            return $isvalid;
+        };
+        return new ValidatorStub($closure, $messages, $key);
     }
 
-    public function testConstructorWithCorrectParams(): void
+    protected function createValidatorComposite(?string $key = null, ?array $validators = null): ValidatorComposite
     {
-        $this->assertInstanceOf(ValidatorComposite::class, $this->sut);
+        $stub = new ValidatorComposite($key);
+        foreach ($validators as $validator) {
+            $stub->addValidator($validator);
+        }
+        return $stub;
     }
 
-    public function testConstructorWithoutParams(): void
+    public function testShouldCreateValidatorCompositeWithKey(): void
     {
-        $this->sut = new ValidatorComposite();
-        $this->assertInstanceOf(ValidatorComposite::class, $this->sut);
-        $this->assertEmpty($this->sut->getValidators());
+        $this->sut = $this->createValidatorComposite('ValidatorCompositeSut');
+        $this->assertEquals('ValidatorCompositeSut', $this->sut->getKey());
     }
 
-    public function testConstructorWithInvalidParams(): void
+    public function testShouldCreateValidatorCompositeWithoutKey(): void
     {
-        $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('Invalid validator');
-        $this->sut = new ValidatorComposite([
-            new stdClass()
-        ]);
+        $this->sut = $this->createValidatorComposite();
+        $this->assertEquals($this->sut->getKey(), $this->sut->getKey());
     }
 
-    public function testAddValidator(): void
+    public function testShouldAddValidator(): void
     {
-        $this->sut = new ValidatorComposite();
-        $this->assertCount(0, $this->sut->getValidators()->toArray());
-        $this->sut->addValidator(new ValidatorStubOne());
-        $this->assertCount(1, $this->sut->getValidators()->toArray());
+        $validatorOne = $this->createValidator(true, ['ValidatorOne is invalid'], 'ValidatorOne');
+        $validatorTwo = $this->createValidator(false, ['ValidatorTwo is invalid'], 'ValidatorTwo');
+        $validatorThree = $this->createValidator(false, ['ValidatorThree is invalid'], 'ValidatorThree');
+        $validatorFour = $this->createValidator(true, ['ValidatorFour is invalid'], 'ValidatorFour');
+
+        $validatorOneTwo = $this->createValidatorComposite('ValidatorOneTwo', [$validatorOne, $validatorTwo]);
+
+        $validatorThreeFour = $this->createValidatorComposite('ValidatorThreeFour', [$validatorThree, $validatorFour]);
+
+        $this->sut = $this->createValidatorComposite('ValidatorCompositeSut', [$validatorOneTwo, $validatorThreeFour]);
+
+        $this->assertCount(2, $this->sut);
     }
 
-    public function testAddValidatorWithInvalidParams(): void
+    public function testShouldThrowExceptionWhenAddValidatorAlreadyExists(): void
     {
-        $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('Validator already exists');
-        $this->sut->addValidator(new ValidatorStubOne());
-        $this->sut->addValidator(new ValidatorStubOne());
+        $validatorOne = $this->createValidator(true, ['ValidatorOne is invalid'], 'ValidatorOne');
+        $validatorTwo = $this->createValidator(true, ['ValidatorTwo is invalid'], 'ValidatorTwo');
+        $validatorThree = $this->createValidator(false, ['ValidatorThree is invalid'], 'ValidatorThree');
+
+        $this->sut = $this->createValidatorComposite(
+            'ValidatorCompositeSut',
+            [$validatorOne, $validatorTwo, $validatorThree]
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Validator ValidatorOne already exists');
+        $this->sut->addValidator($validatorOne);
     }
 
-    public function testGetValidator(): void
+    public function testShouldRemoveValidator(): void
     {
-        $this->assertInstanceOf(
-            ValidatorStubOne::class,
-            $this->sut->getValidator(ValidatorStubOne::class)
+        $validatorOne = $this->createValidator(true, ['ValidatorOne is invalid'], 'ValidatorOne');
+        $validatorTwo = $this->createValidator(true, ['ValidatorTwo is invalid'], 'ValidatorTwo');
+        $validatorThree = $this->createValidator(false, ['ValidatorThree is invalid'], 'ValidatorThree');
+
+        $this->sut = $this->createValidatorComposite(
+            'ValidatorCompositeSut',
+            [$validatorOne, $validatorTwo, $validatorThree]
+        );
+
+        $this->assertCount(3, $this->sut);
+        $this->sut->removeValidator($validatorOne);
+        $this->assertCount(2, $this->sut);
+    }
+
+    public function testShouldThrowExceptionWhenRemoveValidatorDoesNotExists(): void
+    {
+        $validatorOne = $this->createValidator(true, ['ValidatorOne is invalid'], 'ValidatorOne');
+        $validatorTwo = $this->createValidator(true, ['ValidatorTwo is invalid'], 'ValidatorTwo');
+        $validatorThree = $this->createValidator(false, ['ValidatorThree is invalid'], 'ValidatorThree');
+        $validatorFour = $this->createValidator(true, ['ValidatorFour is invalid'], 'ValidatorFour');
+
+        $this->sut = $this->createValidatorComposite(
+            'ValidatorCompositeSut',
+            [$validatorOne, $validatorTwo, $validatorThree]
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Validator ValidatorFour not found');
+        $this->sut->removeValidator($validatorFour);
+    }
+
+    public function testShouldValidateWithoutErrors(): void
+    {
+        $validatorOne = $this->createValidator(true, ['ValidatorOne is invalid'], 'ValidatorOne');
+        $validatorTwo = $this->createValidator(true, ['ValidatorTwo is invalid'], 'ValidatorTwo');
+        $validatorThree = $this->createValidator(true, ['ValidatorThree is invalid'], 'ValidatorThree');
+        $validatorFour = $this->createValidator(true, ['ValidatorFour is invalid'], 'ValidatorFour');
+
+        $validatorOneTwo = $this->createValidatorComposite('ValidatorOneTwo', [$validatorOne, $validatorTwo]);
+
+        $validatorThreeFour = $this->createValidatorComposite('ValidatorThreeFour', [$validatorThree, $validatorFour]);
+
+        $this->sut = $this->createValidatorComposite('ValidatorCompositeSut', [$validatorOneTwo, $validatorThreeFour]);
+
+        $this->assertTrue($this->sut->isValid('value'));
+    }
+
+    public function testShouldValidateWithErrors(): void
+    {
+        $validatorOne = $this->createValidator(false, ['ValidatorOne is invalid'], 'ValidatorOne');
+        $validatorTwo = $this->createValidator(true, ['ValidatorTwo is invalid'], 'ValidatorTwo');
+        $validatorThree = $this->createValidator(false, ['ValidatorThree is invalid'], 'ValidatorThree');
+        $validatorFour = $this->createValidator(true, ['ValidatorFour is invalid'], 'ValidatorFour');
+
+        $validatorOneTwo = $this->createValidatorComposite('ValidatorOneTwo', [$validatorOne, $validatorTwo]);
+
+        $validatorThreeFour = $this->createValidatorComposite('ValidatorThreeFour', [$validatorThree, $validatorFour]);
+
+        $this->sut = $this->createValidatorComposite('ValidatorCompositeSut', [$validatorOneTwo, $validatorThreeFour]);
+
+        $this->assertFalse($this->sut->isValid('valueOne'));
+        $this->assertEquals(
+            [
+                'ValidatorOneTwo' => [
+                    'ValidatorOne' => ['ValidatorOne is invalid'],
+                ],
+                'ValidatorThreeFour' => [
+                    'ValidatorThree' => ['ValidatorThree is invalid'],
+                ]
+            ],
+            $this->sut->getMessages()
         );
     }
 
-    public function testGetValidatorWithInvalidParams(): void
+    public function testShouldValidateCollectionValue(): void
     {
-        $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('Validator does not exist');
-        $this->sut->getValidator('InvalidValidator');
+        $validatorOne = $this->createValidator(true, ['ValidatorOne is invalid'], 'ValidatorOne');
+        $validatorTwo = $this->createValidator(true, ['ValidatorTwo is invalid'], 'ValidatorTwo');
+        $validatorThree = $this->createValidator(true, ['ValidatorThree is invalid'], 'ValidatorThree');
+        $validatorFour = $this->createValidator(true, ['ValidatorFour is invalid'], 'ValidatorFour');
+
+        $validatorOneTwo = $this->createValidatorComposite('ValidatorOneTwo', [$validatorOne, $validatorTwo]);
+
+        $validatorThreeFour = $this->createValidatorComposite('ValidatorThreeFour', [$validatorThree, $validatorFour]);
+
+        $this->sut = $this->createValidatorComposite('ValidatorCompositeSut', [$validatorOneTwo, $validatorThreeFour]);
+
+        $this->assertTrue($this->sut->isValid(['valueOne', 'valueTwo']));
     }
 
-    public function testGetValidators(): void
+    public function testShouldValidateCollectionValueWithErrors(): void
     {
-        $this->assertCount(2, $this->sut->getValidators());
-    }
+        $validatorOne = $this->createValidator(false, ['ValidatorOne is invalid'], 'ValidatorOne');
+        $validatorTwo = $this->createValidator(true, ['ValidatorTwo is invalid'], 'ValidatorTwo');
+        $validatorThree = $this->createValidator(false, ['ValidatorThree is invalid'], 'ValidatorThree');
+        $validatorFour = $this->createValidator(true, ['ValidatorFour is invalid'], 'ValidatorFour');
 
-    public function testRemoveValidator(): void
-    {
-        $this->sut->removeValidator($this->validatorOne);
-        $this->assertCount(1, $this->sut->getValidators());
-    }
+        $validatorOneTwo = $this->createValidatorComposite('ValidatorOneTwo', [$validatorOne, $validatorTwo]);
 
-    public function testRemoveValidatorWithInvalidParams(): void
-    {
-        $this->sut = new ValidatorComposite();
-        $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('Validator does not exist');
-        $this->sut->removeValidator(new ValidatorStubOne());
-    }
+        $validatorThreeFour = $this->createValidatorComposite('ValidatorThreeFour', [$validatorThree, $validatorFour]);
 
-    public function testValidate(): void
-    {
-        $this->assertTrue($this->sut->validate('valid'));
-    }
+        $this->sut = $this->createValidatorComposite('ValidatorCompositeSut', [$validatorOneTwo, $validatorThreeFour]);
 
-    public function testValidateWithInvalidParams(): void
-    {
-        $mockedValidator = $this->createMock(AbstractValidator::class);
-        $mockedValidator->method('validate')->willReturn(false);
-        $mockedValidator->method('getError')->willReturn(new DomainException('Invalid'));
-
-        $this->sut = new ValidatorComposite();
-        $this->sut->addValidator($mockedValidator);
-        $this->assertFalse($this->sut->validate('invalid'));
-    }
-
-    public function testGetErrorWithValidParams(): void
-    {
-        $this->sut->validate('valid');
-        $this->assertNull($this->sut->getError());
-    }
-
-    public function testGetErrorWithInvalidParams(): void
-    {
-        $mockedValidator = $this->createMock(AbstractValidator::class);
-        $mockedValidator->method('validate')->willReturn(false);
-        $mockedValidator->method('getError')->willReturn(new DomainException('Invalid'));
-
-        $this->sut = new ValidatorComposite();
-        $this->sut->addValidator($mockedValidator);
-
-        $this->sut->validate('invalid');
-        $this->assertInstanceOf(DomainException::class, $this->sut->getError());
-        $this->assertEquals('Invalid', $this->sut->getError()->getMessage());
-    }
-
-    public function testGetErrorWithInvalidParamsAndMultipleErros(): void
-    {
-        $mockedValidatorOne = $this->createMock(ValidatorStubOne::class);
-        $mockedValidatorOne->method('validate')->willReturn(false);
-        $mockedValidatorOne->method('getError')->willReturn(new DomainException('Invalid One'));
-        $mockedValidatorTwo = $this->createMock(ValidatorStubTwo::class);
-        $mockedValidatorTwo->method('validate')->willReturn(false);
-        $mockedValidatorTwo->method('getError')->willReturn(new DomainException('Invalid Two'));
-
-        $this->sut = new ValidatorComposite();
-        $this->sut->addValidator($mockedValidatorOne);
-        $this->sut->addValidator($mockedValidatorTwo);
-
-        $this->sut->validate('invalid');
-        $this->assertInstanceOf(DomainException::class, $this->sut->getError());
-        $this->assertEquals('Invalid One, Invalid Two', $this->sut->getError()->getMessage());
+        $this->assertFalse($this->sut->isValid(['valueOne', 'valueTwo']));
+        $this->assertEquals(
+            [
+                [
+                    'ValidatorOneTwo' => [
+                        'ValidatorOne' => ['ValidatorOne is invalid'],
+                    ],
+                    'ValidatorThreeFour' => [
+                        'ValidatorThree' => ['ValidatorThree is invalid'],
+                    ]
+                ],
+                [
+                    'ValidatorOneTwo' => [
+                        'ValidatorOne' => ['ValidatorOne is invalid'],
+                    ],
+                    'ValidatorThreeFour' => [
+                        'ValidatorThree' => ['ValidatorThree is invalid'],
+                    ]
+                ]
+            ],
+            $this->sut->getMessages()
+        );
     }
 }
